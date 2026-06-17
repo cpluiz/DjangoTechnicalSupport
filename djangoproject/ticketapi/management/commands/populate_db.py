@@ -10,6 +10,7 @@ class Command(BaseCommand):
         user = User.objects.filter(username='admin').first()
         if not user:
             user = User.objects.create_superuser(username='admin', password='admin')
+            user.groups.add(Group.objects.get(name="Attendants"))
             self.stdout.write(self.style.SUCCESS(f'Successfully populated db with admin user'))
 
         ThroughModel = User.groups.through

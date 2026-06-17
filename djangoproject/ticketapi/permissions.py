@@ -8,8 +8,11 @@ class IsInGroup(BasePermission):
         
         required_group = getattr(view, 'required_group', None)
 
+        if isinstance(required_group, str):
+            required_group = [required_group]
+
         if required_group:
-            return request.user.groups.filter(name=required_group).exists()
+            return request.user.groups.filter(name__in=required_group).exists()
         
         return false
 

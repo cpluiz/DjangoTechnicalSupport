@@ -1,8 +1,10 @@
 from django.urls import path
 from ticketapi import views
+from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
-    path('', views.GetTicketsAPIView.as_view()),
-    path('<int:ticket_id>/', views.GetTicketAPIView.as_view()),
-    path('<int:id>/interactions', views.GetTicketInteractionsAPIView.as_view()),
 ]
+
+router = DefaultRouter()
+router.register('', views.TicketViewSet, basename='')
+urlpatterns += router.urls
