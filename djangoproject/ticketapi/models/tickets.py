@@ -47,5 +47,7 @@ class Ticket(models.Model):
         blank=True
     )
 
+    users = models.ManyToManyField(User, through="Interaction", related_name="tickets")
+
     def __str__(self):
         return self.title

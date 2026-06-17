@@ -99,11 +99,15 @@ class TicketCategorySerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     interactions = InteractionSerializer(many=True, read_only=True)
+
+    customer_detail = UserSerializer(source='customer', read_only=True)
     customer = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(groups__name='Customers'),
         many=False,
-        required=False
+        required=True
     )
+
+    attendant_detail = UserSerializer(source='attendant', read_only=True)
     attendant = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(groups__name='Attendants'),
         many=False,
@@ -119,14 +123,18 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = [
             'id',
+            'customer_detail',
             'customer',
             'title',
             'description',
             'category',
             'status',
             'priority',
-            'interactions'
+            'attendant_detail',
+            'attendant',
+            'interactions',
         ]
+        read_only_fields = ['attendant']
 
 class UserTicketsSerializer(TicketSerializer):
     attendant = serializers.PrimaryKeyRelatedField(

@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 
 from rest_framework.response import Response
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from ticketapi.permissions import IsInGroup, IsTicketOwner
@@ -115,7 +115,7 @@ class GetTicketFromUserAPIView(generics.RetrieveUpdateDestroyAPIView):
     required_group = 'Customers'
 
 class GetTicketsAPIView(generics.ListCreateAPIView):
-    queryset = Ticket.objects.all()
+    queryset = Ticket.objects.prefetch_related('interactions__user')
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, IsInGroup]
     required_group = 'Attendants'
