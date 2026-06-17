@@ -12,5 +12,5 @@ urlpatterns = [
     path('tickets/', include('ticketapi.urls.tickets')),
     path('categories/', include('ticketapi.urls.categories')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_objtain_pair'),
-    path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

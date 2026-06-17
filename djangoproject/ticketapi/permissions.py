@@ -14,7 +14,7 @@ class IsInGroup(BasePermission):
         if required_group:
             return request.user.groups.filter(name__in=required_group).exists()
         
-        return false
+        return False
 
 class IsTicketOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):

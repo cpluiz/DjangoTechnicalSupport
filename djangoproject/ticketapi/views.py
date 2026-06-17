@@ -20,7 +20,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_staff:
             return User.objects.all()
-        return User.objects.filter(groups__name='Customers')
+        return User.objects.filter(groups__name='Customers', is_active=True)
     permission_classes = [IsAuthenticated, (IsInGroup | IsAdminUser)]
     required_group = 'Attendants'
 
@@ -28,8 +28,32 @@ class CustomerTicketViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     def get_queryset(self):
         if self.request.user.is_staff or self.request.user.groups.filter(name='Attendants').exists():
-            return User.objects.filter(groups__name='Customers')
+            return User.objects.filter(groups__name='Customers', is_active=True)
         return User.objects.filter(id=self.request.user.id)
+    def get_object(self):
+        if 'pk' not in self.kwargs:
+            return User.objects.get(id=self.request.user.id)
+        return super().get_object()
+    
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update']:
+            self.required_group = 'Customers'
+            return [IsAuthenticated(), IsInGroup()]
+        return super().get_permissions()
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        request.data['username'] = instance.username
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+        
+        
+    permission_classes = [IsAuthenticated, (IsInGroup | IsAdminUser)]
+    required_group = ['Attendants', 'Customers']
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()

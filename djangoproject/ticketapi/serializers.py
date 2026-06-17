@@ -15,15 +15,17 @@ class UserSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'groups')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'groups')
         extra_kwargs = {
-            'password': {'write_only' : True, 'required' : False}
+            'password': {'write_only':True, 'required' : False},
+            'first_name': {'allow_null':True, 'allow_blank':True, 'required': False},
+            'first_name': {'allow_null':True, 'allow_blank':True, 'required': False}
         }
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['groups'] = GroupSerializer(instance.groups.all(), many=True).data
-        return representation
+        return {key: value for key, value in representation.items() if value not in [None, ""]}
     
     def create(self, validated_data):
         groups_data = validated_data.pop('groups', None)
@@ -39,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
         
         return user
     
-    def update(self, intance, validated_data):
+    def update(self, instance, validated_data):
         groups_data = validated_data.pop('groups', None)
         password = validated_data.pop('password', None)
 
