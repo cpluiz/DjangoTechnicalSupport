@@ -11,6 +11,10 @@ echo "Populate Server"
 python manage.py populate_db
 echo "==================================="
 
+echo "Create Spectacular SCHEMA"
+python manage.py spectacular --color --file schema.yml
+echo "==================================="
+
 echo "==================================="
 echo "Start server"
 python manage.py runserver 0.0.0.0:8000

@@ -37,9 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ticketapi',
+    'drf_spectacular',
     'rest_framework',
     'rest_framework.authtoken',
+    'ticketapi',
 ]
 
 MIDDLEWARE = [
@@ -128,5 +129,13 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS' : 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE' : 'Ticket API',
+    'DESCRIPTION' : 'A simple ticket API backend system',
+    'VERSION' : '0.0.1',
+    'SERVE_INCLUDE_SCHEMA': False
 }

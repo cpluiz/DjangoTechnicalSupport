@@ -2,3 +2,4 @@ Django==6.0.6
 psycopg[binary]
 djangorestframework==3.17.0
 djangorestframework-simplejwt
+drf-spectacular
