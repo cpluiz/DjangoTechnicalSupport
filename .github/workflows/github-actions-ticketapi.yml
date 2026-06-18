@@ -1,0 +1,12 @@
+jobs:
+  ticket_api_job:
+    runs-on: ubuntu-latest
+    name: Ticket API Deploy
+    steps:
+      - name: Deploy
+        id: api
+        uses: back4app/Github-Ci-Cd-Example@v1
+        with:
+          appid: '95039bc9-c2b3-49a7-a216-d6b42cef7121'
+      - name: Get the output time
+        run: echo "The time was ${{ steps.hello.outputs.time }}"
