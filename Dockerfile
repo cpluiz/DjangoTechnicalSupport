@@ -4,6 +4,10 @@ ENV PYTHONBUFFERED 1
 
 WORKDIR /app
 
+RUN python3 -m venv /opt/apienv
+
+ENV PATH="/opt/apienv/bin:$PATH"
+
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt

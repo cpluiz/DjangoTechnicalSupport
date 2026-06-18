@@ -1,7 +1,4 @@
 #!/bin/bash
-python3 -m venv apienv
-source apienv/bin/activate
-
 echo "Create migrations"
 python manage.py makemigrations ticketapi
 echo "==================================="
