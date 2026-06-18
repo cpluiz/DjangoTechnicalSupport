@@ -2,7 +2,7 @@ name: CI/CD Pipeline to Back4App
 
 env:
   PRODUCTION_APP_ID: "95039bc9-c2b3-49a7-a216-d6b42cef7121"
-
+  APP_NAME: "Ticket API"
 on:
   push:
     branches:
@@ -115,7 +115,7 @@ jobs:
           cat > .parse.local << EOF
           {
             "applications": {
-              "Production": {
+              "Ticket API": {
                 "applicationId": "${PROD_APP_ID}"
               }
             }
@@ -124,8 +124,9 @@ jobs:
           echo "✅ Config file created"
 
       - name: Deploy to Back4App
+        working-directory: ./
         env:
-          APP_NAME: ${{ Ticket API }}
+          APP_NAME: ${{ env.APP_NAME }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           DESCRIPTION="Deploy from GitHub Actions - ${APP_NAME} - Branch: ${{ github.ref_name }} - ${TIMESTAMP}"
