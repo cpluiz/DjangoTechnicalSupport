@@ -1,11 +1,13 @@
 name: CI/CD Pipeline to Back4App
 
 env:
+  DEVELOPMENT_APP_ID: "ae18fa3e-f8ed-4f81-963f-562fe38da9b2"
   PRODUCTION_APP_ID: "95039bc9-c2b3-49a7-a216-d6b42cef7121"
   APP_NAME: "Ticket API"
 on:
   push:
     branches:
+      - development
       - main
   workflow_dispatch:
 
@@ -36,6 +38,7 @@ jobs:
 
       - name: Validate configuration
         env:
+          DEV_APP_ID: ${{ env.DEVELOPMENT_APP_ID }}
           PROD_APP_ID: ${{ env.PRODUCTION_APP_ID }}
           B4A_EMAIL: ${{ secrets.BACK4APP_EMAIL }}
           B4A_KEY: ${{ secrets.BACK4APP_ACCOUNT_KEY }}
@@ -45,6 +48,14 @@ jobs:
           
           ERRORS=0
           
+          # Check if App IDs have been configured
+          if [ "$DEV_APP_ID" == "YOUR_DEVELOPMENT_APP_ID_HERE" ]; then
+            echo "❌ DEVELOPMENT_APP_ID has not been configured!"
+            echo "   → Edit line 38 in simpleDeploy.yaml with your Development App ID"
+            echo ""
+            ERRORS=$((ERRORS + 1))
+          fi
+
           # Check if App IDs have been configured
           if [ "$DEV_APP_ID" == "YOUR_DEVELOPMENT_APP_ID_HERE" ]; then
             echo "❌ DEVELOPMENT_APP_ID has not been configured!"
@@ -82,6 +93,61 @@ jobs:
           fi
           
           echo "✅ All configuration looks good!"
+
+      - name: Check branch setup
+        run: |
+          echo "🔍 Checking branch setup..."
+          echo ""
+          
+          # Check for development branch
+          if git ls-remote --heads origin development | grep -q development; then
+            echo "✅ 'development' branch exists"
+          else
+            echo "⚠️  'development' branch does not exist!"
+            echo ""
+            echo "   To create it, run these commands in your terminal:"
+            echo "   ─────────────────────────────────────────────────"
+            echo "   git checkout -b development"
+            echo "   git push -u origin development"
+            echo ""
+          fi
+          
+          # Check for main branch
+          if git ls-remote --heads origin main | grep -q main; then
+            echo "✅ 'main' branch exists"
+          else
+            echo "⚠️  'main' branch does not exist!"
+            echo ""
+            echo "   To create it, run these commands in your terminal:"
+            echo "   ─────────────────────────────────────────────────"
+            echo "   git checkout -b main"
+            echo "   git push -u origin main"
+            echo ""
+          fi
+          
+          echo ""
+          echo "📌 Current branch: ${{ github.ref_name }}"
+
+      - name: Determine deployment target
+        id: target
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          
+          if [ "$BRANCH" == "development" ]; then
+            echo "app_name=Development" >> $GITHUB_OUTPUT
+            echo "app_id=${{ env.DEVELOPMENT_APP_ID }}" >> $GITHUB_OUTPUT
+            echo ""
+            echo "🎯 Target: Development App"
+          elif [ "$BRANCH" == "main" ]; then
+            echo "app_name=Production" >> $GITHUB_OUTPUT
+            echo "app_id=${{ env.PRODUCTION_APP_ID }}" >> $GITHUB_OUTPUT
+            echo ""
+            echo "🎯 Target: Production App"
+          else
+            echo "❌ Unknown branch: $BRANCH"
+            echo "   This workflow only supports 'development' and 'main' branches."
+            exit 1
+          fi
       
       - name: Install Back4App CLI
         run: |
@@ -109,13 +175,17 @@ jobs:
       
       - name: Create Back4App config
         env:
+          DEV_APP_ID: ${{ env.DEVELOPMENT_APP_ID }}
           PROD_APP_ID: ${{ env.PRODUCTION_APP_ID }}
         run: |
           echo "📝 Creating .parse.local config..."
           cat > .parse.local << EOF
           {
             "applications": {
-              "Ticket API": {
+              "Development": {
+                "applicationId": "${DEV_APP_ID}"
+              },
+              "Production": {
                 "applicationId": "${PROD_APP_ID}"
               }
             }
@@ -126,7 +196,7 @@ jobs:
       - name: Deploy to Back4App
         working-directory: ./
         env:
-          APP_NAME: ${{ env.APP_NAME }}
+          APP_NAME: ${{ steps.target.outputs.app_name }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           DESCRIPTION="Deploy from GitHub Actions - ${APP_NAME} - Branch: ${{ github.ref_name }} - ${TIMESTAMP}"
