@@ -1,14 +1,32 @@
-on: [push]
+name: CI/CD Pipeline to Back4App
 
+on:
+  push:
+    branches:
+      - main
 jobs:
-  ticket_api_job:
+  test-and-build:
     runs-on: ubuntu-latest
-    name: Ticket API Deploy
+
     steps:
-      - name: Deploy
-        id: api
-        uses: back4app/Github-Ci-Cd-Example@v1
-        with:
-          appid: '95039bc9-c2b3-49a7-a216-d6b42cef7121'
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+      # Step 1: Check out the repository codebase
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Build the Docker image locally to verify there are no compilation/syntax errors
+      - name: Verify Docker Build
+        run: |
+          docker build -t back4app-app:test .
+
+      # Step 3: Run your application tests (Optional)
+      # - name: Run Tests
+      #   run: docker run back4app-app:test npm run test
+  deploy:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Informational step tracking the Back4App native hook
+      - name: Deploy to Back4App Host
+        run: |
+          echo "Code validated. Merging code changes triggers Back4App's automated Docker build pipeline."
