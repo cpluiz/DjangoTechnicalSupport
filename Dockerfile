@@ -17,7 +17,11 @@ RUN pip install -r requirements.txt
 
 COPY --chown=apiuser:apigroup . .
 
+USER root
+
 RUN chown -R apiuser:apigroup /app
+
+USER apiuser
 
 EXPOSE 8000
 

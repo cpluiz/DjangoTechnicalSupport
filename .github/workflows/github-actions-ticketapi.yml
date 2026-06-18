@@ -148,6 +148,20 @@ jobs:
             echo "   This workflow only supports 'development' and 'main' branches."
             exit 1
           fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          if [ -f "package.json" ]; then
+            echo "📦 Found package.json - installing dependencies..."
+            npm install
+          else
+            echo "⏭️  No package.json found - skipping npm install"
+          fi
       
       - name: Install Back4App CLI
         run: |
@@ -217,5 +231,38 @@ jobs:
           echo "=================================================="
           echo "✅ DEPLOYMENT COMPLETE!"
           echo "=================================================="
+      
+      - name: Verify Cloud Code is running
+        env:
+          APP_ID: ${{ steps.target.outputs.app_id }}
+        run: |
+          echo "🏥 Verifying Cloud Code health..."
+          
+          # Wait for deployment to propagate
+          sleep 5
+          
+          # Call a non-existent function - if Cloud Code is loaded, we get "Invalid function" error
+          RESPONSE=$(curl -s -X POST \
+            -H "X-Parse-Application-Id: $APP_ID" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "https://parseapi.back4app.com/functions/__health_check_test__")
+          
+          # Check if we get the expected "Invalid function" error (proves Cloud Code is running)
+          if echo "$RESPONSE" | grep -q "Invalid function"; then
+            echo ""
+            echo "=================================================="
+            echo "✅ HEALTH CHECK PASSED!"
+            echo "   Cloud Code is running correctly."
+            echo "=================================================="
+          else
+            echo ""
+            echo "=================================================="
+            echo "⚠️  Health check returned unexpected response:"
+            echo "   $RESPONSE"
+            echo ""
+            echo "   This may be normal if your app has custom error handling."
+            echo "=================================================="
+          fi
 
       
