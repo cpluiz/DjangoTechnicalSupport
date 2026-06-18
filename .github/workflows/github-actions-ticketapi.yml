@@ -1,26 +1,29 @@
 name: CI/CD Pipeline to Back4App
 
+env:
+  PRODUCTION_APP_ID: "95039bc9-c2b3-49a7-a216-d6b42cef7121"
+
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
 jobs:
   test-and-build:
+    name: 🚀 Deploy to Back4App
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository codebase
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Step 2: Build the Docker image locally to verify there are no compilation/syntax errors
       - name: Verify Docker Build
         run: |
           docker build -t back4app-app:test .
-
-      # Step 3: Run your application tests (Optional)
-      # - name: Run Tests
-      #   run: docker run back4app-app:test npm run test
+      
   deploy:
     needs: test-and-build
     runs-on: ubuntu-latest
@@ -30,3 +33,118 @@ jobs:
       - name: Deploy to Back4App Host
         run: |
           echo "Code validated. Merging code changes triggers Back4App's automated Docker build pipeline."
+
+      - name: Validate configuration
+        env:
+          PROD_APP_ID: ${{ env.PRODUCTION_APP_ID }}
+          B4A_EMAIL: ${{ secrets.BACK4APP_EMAIL }}
+          B4A_KEY: ${{ secrets.BACK4APP_ACCOUNT_KEY }}
+        run: |
+          echo "🔍 Checking configuration..."
+          echo ""
+          
+          ERRORS=0
+          
+          # Check if App IDs have been configured
+          if [ "$DEV_APP_ID" == "YOUR_DEVELOPMENT_APP_ID_HERE" ]; then
+            echo "❌ DEVELOPMENT_APP_ID has not been configured!"
+            echo "   → Edit line 38 in simpleDeploy.yaml with your Development App ID"
+            echo ""
+            ERRORS=$((ERRORS + 1))
+          fi
+          
+          # Check if secrets are set
+          if [ -z "$B4A_EMAIL" ]; then
+            echo "❌ BACK4APP_EMAIL secret is not set!"
+            echo "   → Go to: Repository Settings → Secrets and variables → Actions → Secrets"
+            echo "   → Click 'New repository secret'"
+            echo "   → Name: BACK4APP_EMAIL"
+            echo "   → Value: Your Back4App account email"
+            echo ""
+            ERRORS=$((ERRORS + 1))
+          fi
+          
+          if [ -z "$B4A_KEY" ]; then
+            echo "❌ BACK4APP_ACCOUNT_KEY secret is not set!"
+            echo "   → Go to: Repository Settings → Secrets and variables → Actions → Secrets"
+            echo "   → Click 'New repository secret'"
+            echo "   → Name: BACK4APP_ACCOUNT_KEY"
+            echo "   → Value: Your Back4App account key"
+            echo ""
+            ERRORS=$((ERRORS + 1))
+          fi
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo "=================================================="
+            echo "❌ Please fix the $ERRORS error(s) above and try again."
+            echo "=================================================="
+            exit 1
+          fi
+          
+          echo "✅ All configuration looks good!"
+      
+      - name: Install Back4App CLI
+        run: |
+          echo "📥 Installing Back4App CLI..."
+          curl -s https://raw.githubusercontent.com/back4app/parse-cli/back4app/installer.sh | sudo /bin/bash
+          echo "✅ Back4App CLI installed"
+      
+      - name: Configure Back4App account
+        env:
+          B4A_EMAIL: ${{ secrets.BACK4APP_EMAIL }}
+          B4A_KEY: ${{ secrets.BACK4APP_ACCOUNT_KEY }}
+        run: |
+          echo "🔐 Configuring Back4App account..."
+          mkdir -p ~/.back4app
+          {
+            echo "machine parsecli.back4app.com#${B4A_EMAIL}"
+            echo "	login default"
+            echo "	password ${B4A_KEY}"
+            echo "machine parsecli.back4app.com"
+            echo "	login default"
+            echo "	password ${B4A_KEY}"
+          } > ~/.back4app/netrc
+          chmod 600 ~/.back4app/netrc
+          echo "✅ Account configured"
+      
+      - name: Create Back4App config
+        env:
+          PROD_APP_ID: ${{ env.PRODUCTION_APP_ID }}
+        run: |
+          echo "📝 Creating .parse.local config..."
+          cat > .parse.local << EOF
+          {
+            "applications": {
+              "Production": {
+                "applicationId": "${PROD_APP_ID}"
+              }
+            }
+          }
+          EOF
+          echo "✅ Config file created"
+
+      - name: Deploy to Back4App
+        env:
+          APP_NAME: ${{ Ticket API }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          DESCRIPTION="Deploy from GitHub Actions - ${APP_NAME} - Branch: ${{ github.ref_name }} - ${TIMESTAMP}"
+          
+          echo "=================================================="
+          echo "🚀 DEPLOYING TO BACK4APP"
+          echo "=================================================="
+          echo ""
+          echo "📌 Branch:      ${{ github.ref_name }}"
+          echo "🎯 Target App:  ${APP_NAME}"
+          echo "🕐 Time:        ${TIMESTAMP}"
+          echo ""
+          echo "=================================================="
+          
+          b4a deploy "${APP_NAME}" --description "${DESCRIPTION}"
+          
+          echo ""
+          echo "=================================================="
+          echo "✅ DEPLOYMENT COMPLETE!"
+          echo "=================================================="
+
+      
