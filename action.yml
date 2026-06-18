@@ -5,6 +5,9 @@ inputs:
     description: 'Deployed container ID'
     required: true
     default: 'none_given'
+outputs:
+  time: #
+    description: 'The time we received'
 runs:
   using: 'docker'
   image: 'Dockerfile'

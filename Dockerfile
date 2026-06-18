@@ -1,12 +1,15 @@
 FROM python:3.13.14-trixie
 
+RUN groupadd -g 10001 apigroup && \
+    useradd -u 10000 -g apigroup -m -s /bin/bash apiuser
+
 ENV PYTHONBUFFERED 1
 
 WORKDIR /app
 
-RUN python3 -m venv /opt/apienv
+RUN chown apiuser:apigroup /app
 
-ENV PATH="/opt/apienv/bin:$PATH"
+USER appuser
 
 COPY requirements.txt .
 
