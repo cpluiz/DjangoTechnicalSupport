@@ -8,10 +8,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('users/', include('ticketapi.urls.users')),
-    path('customers/', include('ticketapi.urls.customers')),
-    path('tickets/', include('ticketapi.urls.tickets')),
-    path('categories/', include('ticketapi.urls.categories')),
+    path('api/users/', include('ticketapi.urls.users')),
+    path('api/customers/', include('ticketapi.urls.customers')),
+    path('api/tickets/', include('ticketapi.urls.tickets')),
+    path('api/categories/', include('ticketapi.urls.categories')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_objtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Spectacular URI
