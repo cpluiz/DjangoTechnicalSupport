@@ -2,7 +2,7 @@ on: [push]
 
 jobs:
   ticket_api_job:
-    runs-on: ubuntu-latest
+    runs-on: python:3.13.14-trixie
     name: Ticket API Deploy
     steps:
       - name: Deploy

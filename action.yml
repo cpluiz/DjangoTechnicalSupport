@@ -1,0 +1,12 @@
+name: 'Deploy ticketapi'
+description: 'Runs the Deployment'
+inputs:
+  appid:
+    description: 'Deployed container ID'
+    required: true
+    default: 'none_given'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.appid }}
