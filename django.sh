@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/bin/sh
+set -e
+
+# Run initial non-root application setup here if needed
+echo "Running entrypoint tasks as: $(whoami)"
+echo "==================================="
+
 echo "Create migrations"
 python manage.py makemigrations ticketapi
 echo "==================================="

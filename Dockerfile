@@ -5,17 +5,19 @@ RUN groupadd -g 10001 apigroup && \
 
 ENV PYTHONBUFFERED 1
 
+USER apiuser
+
 WORKDIR /app
 
 RUN chown apiuser:apigroup /app
 
-USER apiuser
-
-COPY requirements.txt .
+COPY --chown=apiuser:apigroup requirements.txt .
 
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY --chown=apiuser:apigroup . .
+
+RUN chown -R apiuser:apigroup /app
 
 EXPOSE 8000
 
