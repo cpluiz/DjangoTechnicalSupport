@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # Run initial non-root application setup here if needed
 echo "Running entrypoint tasks as: $(whoami)"
