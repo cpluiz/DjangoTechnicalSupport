@@ -1,3 +1,5 @@
+on: [push]
+
 jobs:
   ticket_api_job:
     runs-on: ubuntu-latest
