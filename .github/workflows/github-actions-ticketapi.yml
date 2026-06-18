@@ -7,7 +7,7 @@ env:
 on:
   push:
     branches:
-      - development
+      - dev
       - main
   workflow_dispatch:
 
@@ -134,15 +134,15 @@ jobs:
           BRANCH="${{ github.ref_name }}"
           
           if [ "$BRANCH" == "development" ]; then
-            echo "app_name=Development" >> $GITHUB_OUTPUT
+            echo "app_name=Ticket API Dev" >> $GITHUB_OUTPUT
             echo "app_id=${{ env.DEVELOPMENT_APP_ID }}" >> $GITHUB_OUTPUT
             echo ""
             echo "🎯 Target: Development App"
           elif [ "$BRANCH" == "main" ]; then
-            echo "app_name=Production" >> $GITHUB_OUTPUT
+            echo "app_name=Ticket API" >> $GITHUB_OUTPUT
             echo "app_id=${{ env.PRODUCTION_APP_ID }}" >> $GITHUB_OUTPUT
             echo ""
-            echo "🎯 Target: Production App"
+            echo "🎯 Target: Ticket API"
           else
             echo "❌ Unknown branch: $BRANCH"
             echo "   This workflow only supports 'development' and 'main' branches."
@@ -192,7 +192,7 @@ jobs:
           DEV_APP_ID: ${{ env.DEVELOPMENT_APP_ID }}
           PROD_APP_ID: ${{ env.PRODUCTION_APP_ID }}
         run: |
-          echo "📝 Creating .parse.local config..."
+          echo "📝 Creating Parse local configuration..."
           cat > .parse.local << EOF
           {
             "applications": {
@@ -205,7 +205,16 @@ jobs:
             }
           }
           EOF
-          echo "✅ Config file created"
+
+          # SOLUÇÃO DEFINITIVA: Criar o arquivo de definição do projeto
+          echo "📝 Creating Parse project definition..."
+          cat > .parse.project << EOF
+          {
+            "jssdk": "latest"
+          }
+          EOF
+          
+          echo "✅ Config files created successfully"
 
       - name: Deploy to Back4App
         working-directory: ./

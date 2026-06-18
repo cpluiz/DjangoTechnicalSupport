@@ -12,6 +12,7 @@ services:
       - PG_DB=postgres
       - PG_HOST=db
       - PG_PORT=5432
+      - COMPOSE_HTTP_TIMEOUT=900
     depends_on:
       - db
   db:
