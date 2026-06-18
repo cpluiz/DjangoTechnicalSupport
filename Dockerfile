@@ -9,7 +9,7 @@ WORKDIR /app
 
 RUN chown apiuser:apigroup /app
 
-USER appuser
+USER apiuser
 
 COPY requirements.txt .
 
