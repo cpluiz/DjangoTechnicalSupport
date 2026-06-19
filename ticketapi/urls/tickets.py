@@ -1,10 +1,10 @@
 from django.urls import path
 from ticketapi import views
-from ticketapi.routers import AllowUpdateOnListRouter
+from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
 ]
 
-router = AllowUpdateOnListRouter()
-router.register('', views.TicketViewSet, basename='')
+router = DefaultRouter()
+router.register('', views.TicketViewSet, basename='tickets')
 urlpatterns += router.urls

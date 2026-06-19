@@ -12,7 +12,9 @@ services:
       - PG_DB=postgres
       - PG_HOST=db
       - PG_PORT=5432
-      - COMPOSE_HTTP_TIMEOUT=900
+      - SECRET_KEY='django-insecure-j=a+qp*7+d33m8hasaj(^nl87+y74p9ym*1civ%b-l2(h-*&bb'
+      - COMPOSE_HTTP_TIMEOUT=460
+      - DEBUG=False
     depends_on:
       - db
   db:

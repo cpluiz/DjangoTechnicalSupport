@@ -1,39 +1,123 @@
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework.test import APITestCase
 from django.contrib.auth.models import Group
 from ticketapi.models import User
 
-# Auth tests
-class UsersListTestCase(TestCase):
+class CustomersAPITestCase(APITestCase):
     def setUp(self):
-        user1 = User.objects.create_superuser(username='admin', password='admin')
-        attendant_group = Group.objects.create(name='Attendants')
-        user1.groups.add(attendant_group)
-        user2 = User.objects.create(username='customer1', password='customer1')
-        customer_group = Group.objects.create(name='Customers')
-        user2.groups.add(customer_group)
-    def test_users_endpoint_retrieves_only_authenticated_admins(self):
-        user = User.objects.get(username='admin')
-        self.client.force_login(user)
-        response = self.client.get(reverse('users'))
+        self.adminUser = User.objects.create_superuser(username='testAdmin', password='admin')
+        self.customerUser = User.objects.create_user(username='testCustomer', password='password')
+        
+        self.customers = [
+            User.objects.create_user(username='customer1', password='senha'),
+            User.objects.create_user(username='customer2', password='senha'),
+            User.objects.create_user(username='customer3', password='senha'),
+        ]
 
-        assert response.status_code == 200
-        data = response.json()
-        print(data)
+        self.attendant_group, created = Group.objects.get_or_create(name='Attendants')
+        self.customer_group, created = Group.objects.get_or_create(name='Customers')
+        self.adminUser.groups.add(self.attendant_group)
+        self.customerUser.groups.add(self.customer_group)
+        for customer in self.customers:
+            customer.groups.add(self.customer_group)
+        self.list_url = reverse('customers-list')
+        self.detail_url = reverse('customers-detail', kwargs={'pk' : self.customerUser.id})
 
-class CustomersListTestCase(TestCase):
-    def setUp(self):
-        user1 = User.objects.create_superuser(username='admin', password='admin')
-        attendant_group = Group.objects.create(name='Attendants')
-        user1.groups.add(attendant_group)
-        user2 = User.objects.create(username='customer1', password='customer1')
-        customer_group = Group.objects.create(name='Customers')
-        user2.groups.add(customer_group)
-    def test_users_endpoint_retrieves_only_authenticated_admins(self):
-        user = User.objects.get(username='customer1')
-        self.client.force_login(user)
-        response = self.client.get(reverse('users'))
+    def test_get_customer_list_without_auth(self):
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 401)
+        print(response.json())
 
-        assert response.status_code == 403
-        data = response.json()
-        print(data)
+    def test_get_customers_list_from_admin(self):
+        self.client.force_login(self.adminUser)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+    
+    def test_get_customer_detail_from_admin(self):
+        self.client.force_login(self.adminUser)
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_get_customer_detail(self):
+        self.client.force_login(self.customerUser)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+    
+    def test_update_customer_detail(self):
+        self.client.force_login(self.customerUser)
+        data = {
+            "username" : "newUserName",
+        }
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+    
+    def test_partial_update_customer_detail(self):
+        self.client.force_login(self.customerUser)
+        data = {
+            "email" : "testmail@mail.com",
+        }
+        response = self.client.put(self.list_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_create_user_with_admin(self):
+        self.client.force_login(self.adminUser)
+        data = {
+            "username" : "newUser",
+            "password" : "password"
+        }
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_create_category_without_login(self):
+        self.list_url = reverse('categories-list')
+        data = {"title":"new test category"}
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 401)
+        print(response.json())
+    
+    def test_create_category_with_customer(self):
+        self.client.force_login(self.customerUser)
+        self.list_url = reverse('categories-list')
+        data = {"title":"new test category"}
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 403)
+        print(response.json())
+
+    def test_create_category_with_admin(self):
+        self.client.force_login(self.adminUser)
+        self.list_url = reverse('categories-list')
+        data = {"title":"new test category"}
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_update_category_with_customer(self):
+        self.client.force_login(self.customerUser)
+        self.detail_url = reverse('categories-detail', kwargs={'pk' : 1})
+        data = {"title":"new category name"}
+        response = self.client.post(self.detail_url, data)
+        self.assertEqual(response.status_code, 403)
+        print(response.json())
+
+    def test_update_category_with_admin(self):
+        self.client.force_login(self.customerUser)
+        self.detail_url = reverse('categories-detail', kwargs={'pk' : 1})
+        data = {"title":"new category name"}
+        response = self.client.post(self.detail_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_update_category_without_data(self):
+        self.client.force_login(self.customerUser)
+        self.detail_url = reverse('categories-detail', kwargs={'pk' : 1})
+        data = {}
+        response = self.client.post(self.detail_url, data)
+        self.assertEqual(response.status_code, 403)
+        print(response.json())

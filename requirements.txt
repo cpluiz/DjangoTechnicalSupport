@@ -1,5 +1,6 @@
 Django==6.0.6
-psycopg[binary]
+django-filter==25.2
 djangorestframework==3.17.0
-djangorestframework-simplejwt
-drf-spectacular
+djangorestframework-simplejwt==5.5.1
+drf-spectacular==0.29.0
+psycopg[binary]==3.3.4

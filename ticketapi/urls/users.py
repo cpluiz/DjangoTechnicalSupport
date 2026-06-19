@@ -7,5 +7,5 @@ urlpatterns = [
 ]
 
 router = AllowUpdateOnListRouter()
-router.register('', views.UserViewSet, basename='')
+router.register('', views.UserViewSet, basename='users')
 urlpatterns += router.urls
