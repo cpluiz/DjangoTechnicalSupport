@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from django.contrib.auth.models import Group
-from ticketapi.models import User
+from ticketapi.models import User, Category
 
 class CustomersAPITestCase(APITestCase):
     def setUp(self):
@@ -21,6 +21,9 @@ class CustomersAPITestCase(APITestCase):
         self.customerUser.groups.add(self.customer_group)
         for customer in self.customers:
             customer.groups.add(self.customer_group)
+
+        self.category = Category.objects.create(title="TestCategory")
+        
         self.list_url = reverse('customers-list')
         self.detail_url = reverse('customers-detail', kwargs={'pk' : self.customerUser.id})
 
@@ -95,29 +98,29 @@ class CustomersAPITestCase(APITestCase):
         self.list_url = reverse('categories-list')
         data = {"title":"new test category"}
         response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         print(response.json())
 
     def test_update_category_with_customer(self):
         self.client.force_login(self.customerUser)
-        self.detail_url = reverse('categories-detail', kwargs={'pk' : 1})
+        self.detail_url = reverse('categories-detail', kwargs={'pk' : self.category.pk})
         data = {"title":"new category name"}
-        response = self.client.post(self.detail_url, data)
+        response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, 403)
         print(response.json())
 
     def test_update_category_with_admin(self):
-        self.client.force_login(self.customerUser)
-        self.detail_url = reverse('categories-detail', kwargs={'pk' : 1})
+        self.client.force_login(self.adminUser)
+        self.detail_url = reverse('categories-detail', kwargs={'pk' : self.category.pk})
         data = {"title":"new category name"}
-        response = self.client.post(self.detail_url, data)
+        response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, 200)
         print(response.json())
 
     def test_update_category_without_data(self):
-        self.client.force_login(self.customerUser)
-        self.detail_url = reverse('categories-detail', kwargs={'pk' : 1})
+        self.client.force_login(self.adminUser)
+        self.detail_url = reverse('categories-detail', kwargs={'pk' : self.category.pk})
         data = {}
-        response = self.client.post(self.detail_url, data)
-        self.assertEqual(response.status_code, 403)
+        response = self.client.put(self.detail_url, data)
+        self.assertEqual(response.status_code, 400)
         print(response.json())

@@ -72,8 +72,14 @@ class CustomerTicketViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated, (IsInGroup | IsAdminUser)]
-    required_group = 'Attendants'
+    permission_classes = [IsAuthenticated, IsInGroup]
+    required_group = 'Customers'
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.required_group = 'Attendants'
+            return [IsAuthenticated(), IsInGroup()]
+        return super().get_permissions()
 
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
