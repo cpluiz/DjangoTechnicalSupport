@@ -13,9 +13,11 @@ python manage.py migrate
 echo "==================================="
 
 echo "Populate Server"
-## Toggle --mock_data line comment to avoid creating mock data
-python manage.py populate_db --mock_data
-#python manage.py populate_db
+if [ "$MOCK_DATA" = "true" ]; then
+    python manage.py populate_db --mock_data
+else
+    python manage.py populate_db
+fi
 echo "==================================="
 
 echo "Create Spectacular SCHEMA"

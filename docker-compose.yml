@@ -15,6 +15,7 @@ services:
       - SECRET_KEY='django-insecure-j=a+qp*7+d33m8hasaj(^nl87+y74p9ym*1civ%b-l2(h-*&bb'
       - COMPOSE_HTTP_TIMEOUT=460
       - DEBUG=False
+      - MOCK_DATA=true
     depends_on:
       - db
   db:
