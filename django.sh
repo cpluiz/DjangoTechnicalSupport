@@ -1,9 +1,5 @@
 #!/bin/sh
 
-# Run initial non-root application setup here if needed
-echo "Running entrypoint tasks as: $(whoami)"
-echo "==================================="
-
 echo "Create migrations"
 python manage.py makemigrations ticketapi
 echo "==================================="
@@ -25,9 +21,12 @@ echo "==================================="
 python manage.py spectacular --color --file schema.yml
 echo "==================================="
 
-echo "==================================="
-echo "Start server"
-python manage.py runserver 0.0.0.0:8000
-
-time=$(date)
-echo "::set-output name=time::$time"
+if [ "$TEST_DEPLOY" = "true" ]; then
+    echo "==================================="
+    echo "Run tests"
+    python manage.py test
+else
+    echo "==================================="
+    echo "Start server"
+    python manage.py runserver 0.0.0.0:8000
+fi
