@@ -32,8 +32,6 @@ If you want to make some changes on this simple API, on the file ticketapi/tests
 
 *If you extend the API with new endpoints, or have made some changes in the data structure, don't forget to update the tests file!*
 
-## Deployment
-
 This project has a github-action workflow implemented on the .github\worflows folder, executing the unit tests before deploy on a Cloud Oracle instance.
 
 You can implement your CI/CD worflow on any platform that you feel confortable, as long as you don't forget to setup your environment variables, and check if the platform is compatible with Docker Compose, or only simple Docker containers with a separated database location.
