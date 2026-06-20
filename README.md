@@ -47,6 +47,7 @@ The full list of environment variables that you need to deploy is:
     SECRET_KEY='django-hash-key' #the secret key for your django application
     DEBUG=False #django Debug status
     MOCK_DATA=true #populate your database with mock users/tickets/interactions
+    ALLOWED_HOSTS="['localhost', 127.0.0.1', 'yourhost.com']" #The allowed hosts for Django
     # Postgree database variables
     POSTGRES_USER=postgres
     POSTGRES_PASSWORD=postgres
