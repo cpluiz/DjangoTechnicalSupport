@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from django.contrib.auth.models import Group
-from ticketapi.models import User, Category
+from ticketapi.models import User, Category, Ticket, Interaction
 
 class CustomersAPITestCase(APITestCase):
     def setUp(self):
@@ -23,6 +23,22 @@ class CustomersAPITestCase(APITestCase):
             customer.groups.add(self.customer_group)
 
         self.category = Category.objects.create(title="TestCategory")
+
+        self.ticket = Ticket.objects.create(
+            customer=self.customerUser,
+            attendant=self.adminUser,
+            title="Novo Ticket",
+            description="Testando a inclusão de um novo ticket",
+            category=self.category,
+            priority=2,
+            status=2
+        )
+
+        self.interaction = Interaction.objects.create(
+            ticket=self.ticket,
+            user=self.adminUser,
+            message="Test Message"
+        )
         
         self.list_url = reverse('customers-list')
         self.detail_url = reverse('customers-detail', kwargs={'pk' : self.customerUser.id})
@@ -122,5 +138,91 @@ class CustomersAPITestCase(APITestCase):
         self.detail_url = reverse('categories-detail', kwargs={'pk' : self.category.pk})
         data = {}
         response = self.client.put(self.detail_url, data)
+        self.assertEqual(response.status_code, 400)
+        print(response.json())
+
+    def test_list_all_tickets(self):
+        self.client.force_login(self.adminUser)
+        self.list_url = reverse('tickets-list')
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_create_ticket(self):
+        self.client.force_login(self.customerUser)
+        self.list_url = reverse('tickets-list')
+        data = {
+            "title" : "Creating new Test Ticket",
+            "description" : "detailed ticket description",
+            "category" : self.category.pk,
+            "priority" : 1
+        }
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_create_ticket_missing_argument(self):
+        self.client.force_login(self.customerUser)
+        self.list_url = reverse('tickets-list')
+        data = {
+            "title" : "Creating new Test Ticket",
+            "category" : self.category.pk,
+        }
+        response = self.client.post(self.list_url, data)
+        self.assertEqual(response.status_code, 400)
+        print(response.json())
+    
+    def test_update_ticket_status_as_admin(self):
+        self.client.force_login(self.adminUser)
+        self.list_url = reverse('tickets-detail', kwargs={'pk' : self.ticket.pk})
+        data = {
+            "status" : 3
+        }
+        response = self.client.patch(self.list_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+    
+    def test_update_ticket_status_as_customer(self):
+        self.client.force_login(self.customerUser)
+        self.list_url = reverse('tickets-detail', kwargs={'pk' : self.ticket.pk})
+        data = {
+            "status" : 3
+        }
+        response = self.client.patch(self.list_url, data)
+        self.assertEqual(response.status_code, 403)
+        print(response.json())
+
+    def test_list_all_customer_tickets(self):
+        self.client.force_login(self.customerUser)
+        self.list_url = reverse('tickets-list')
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_create_ticket_interaction_as_customer(self):
+        self.client.force_login(self.customerUser)
+        self.detail_url = reverse('tickets-interactions-create', kwargs={'pk' : self.ticket.pk})
+        data = {
+            "message" : "Creating new message as Customer",
+        }
+        response = self.client.post(self.detail_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+
+    def test_create_ticket_interaction_as_admin(self):
+        self.client.force_login(self.adminUser)
+        self.detail_url = reverse('tickets-interactions-create', kwargs={'pk' : self.ticket.pk})
+        data = {
+            "message" : "Creating new message as Admin",
+        }
+        response = self.client.post(self.detail_url, data)
+        self.assertEqual(response.status_code, 200)
+        print(response.json())
+    
+    def test_create_ticket_interaction_missing_parameter(self):
+        self.client.force_login(self.customerUser)
+        self.detail_url = reverse('tickets-interactions-create', kwargs={'pk' : self.ticket.pk})
+        data = {}
+        response = self.client.post(self.detail_url, data)
         self.assertEqual(response.status_code, 400)
         print(response.json())

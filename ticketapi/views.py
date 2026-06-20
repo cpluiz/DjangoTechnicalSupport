@@ -97,20 +97,45 @@ class TicketViewSet(viewsets.ModelViewSet):
         if self.action in ['get_interactions', 'new_interaction'] : 
             return InteractionSerializer
         return super().get_serializer_class()
+
+    def create(self, request, *args, **kwargs):
+        if self.request.user.groups.filter(name='Customers').exists():
+            ticket_data = request.data.copy()
+            if ticket_data.get("customer") is None:
+                ticket_data['customer'] = self.request.user.id
+            serializer = self.get_serializer(data=ticket_data)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        payload = request.data.copy()
+        
+        if self.request.user.groups.filter(name='Customers').exists() and (payload("status").exists() and payload['status'] != instance.status_code):
+            return Response('Apenas Atendentes e administradores podem atualizar o status', status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = self.get_serializer(instance, data=payload, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+        
+
     
-    @action(detail=True, url_path='interactions', methods=['get'])
+    @action(detail=True, url_path='interactions', url_name='interactions-list', methods=['get'])
     def get_interactions(self, request, pk=None):
         interactions = Interaction.objects.filter(ticket_id=self.get_object().id)
         serializer = InteractionSerializer(interactions, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, url_path='interactions/new', methods=['post'])
+    @action(detail=True, url_path='interactions/new', url_name='interactions-create', methods=['post'])
     def new_interaction(self, request, pk='id'):
-        interaction_data = request.data
+        interaction_data = request.data.copy()
         if interaction_data.get("user") is None:
             interaction_data['user'] = self.request.user.id
         interaction_data['ticket'] = pk
-        serializer = InteractionSerializer(data=request.data)
+        serializer = InteractionSerializer(data=interaction_data)
         serializer.is_valid(raise_exception=True)
         new_interaction = serializer.save()
         return Response(serializer.data)
